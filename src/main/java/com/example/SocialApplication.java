@@ -28,13 +28,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
 @RestController
-@CrossOrigin(origins = "http://localhost:8888/crosssite-testing/") // this work if the csrf are disbale in the configuration
+//@CrossOrigin(origins = "http://localhost:8888/crosssite-testing/") // this work if the csrf are disable in the configuration
 public class SocialApplication extends WebSecurityConfigurerAdapter{
    
     @GetMapping("/user")
@@ -42,7 +42,7 @@ public class SocialApplication extends WebSecurityConfigurerAdapter{
         return Collections.singletonMap("name", principal.getAttribute("name"));
     }
     
-    @GetMapping("/logout")
+    @PostMapping("/logout")
     public void logout(@AuthenticationPrincipal OAuth2User principal) {
         SecurityContextHolder.clearContext();
     }
@@ -55,18 +55,18 @@ public class SocialApplication extends WebSecurityConfigurerAdapter{
     protected void configure(HttpSecurity http) throws Exception {
       // @formatter:off
         http.cors().and()
-            .csrf().disable()
+                /* .csrf().disable() */
             .authorizeRequests(a -> a
-                .antMatchers("/", "/error", "/webjars/**").permitAll()
+                .antMatchers("/", "/error", "/webjars/**", "/logout").permitAll()
                 .anyRequest().authenticated()
             )
             .exceptionHandling(e -> e
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
             )
-                /*
-                 * .csrf(c -> c
-                 * .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) )
-                 */  
+                
+                  .csrf(c -> c
+                  .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) )
+                   
             .logout(l -> l
                     .logoutSuccessUrl("/").permitAll()
                 )
